@@ -1,14 +1,13 @@
 name: Quests
 
-# This will be replaced with the property "version" in build.gradle
-version: ${version}
+# This will be replaced with the property "release.version" in pom.xml upon build.
+version: 111
 
 main: com.leonardobishop.quests.Quests
-website: https://github.com/LMBishop/Quests
-authors: [LMBishop, NicoNekoDev, nivcoo, Rubenicos, RodneyMKay, Auxilor, BavoVanMeel, SuSeu1414, Reinatix]
-softdepend: [ASkyBlock, BentoBox, IridiumSkyblock, uSkyBlock, Citizens, MythicMobs, PlaceholderAPI, Essentials, ShopGUIPlus, CoreProtect]
+author: LMBishop
+softdepend: [ASkyBlock, uSkyBlock, Citizens, PlaceholderAPI]
 prefix: Quests
-api-version: "1.13" # allows new API features but Quests will still work pre-1.13
+api-version: 1.16
 
 commands:
   quests:
@@ -17,13 +16,9 @@ commands:
     permission: quests.command
     aliases: [q, quest]
 
-#todo redo perms
 permissions:
   quests.command:
     description: Permission for main command
-    default: true
-  quests.command.random:
-    description: Permission to execute /q random
     default: true
   quests.admin:
     description: Permission for the admin commands 

@@ -1,115 +1,59 @@
 package com.leonardobishop.quests;
 
+import com.leonardobishop.quests.api.QuestsPlaceholders;
+import com.leonardobishop.quests.bstats.Metrics;
 import com.leonardobishop.quests.commands.CommandQuests;
+import com.leonardobishop.quests.events.EventInventory;
 import com.leonardobishop.quests.events.EventPlayerJoin;
 import com.leonardobishop.quests.events.EventPlayerLeave;
-import com.leonardobishop.quests.events.MenuController;
-import com.leonardobishop.quests.hooks.coreprotect.CoreProtectHook;
-import com.leonardobishop.quests.hooks.coreprotect.CoreProtectNoHook;
-import com.leonardobishop.quests.hooks.coreprotect.ICoreProtectHook;
-import com.leonardobishop.quests.hooks.itemgetter.ItemGetter;
-import com.leonardobishop.quests.hooks.itemgetter.ItemGetterLatest;
-import com.leonardobishop.quests.hooks.itemgetter.ItemGetter_1_13;
-import com.leonardobishop.quests.hooks.itemgetter.ItemGetter_Late_1_8;
-import com.leonardobishop.quests.hooks.papi.IPlaceholderAPIHook;
-import com.leonardobishop.quests.hooks.papi.PlaceholderAPIHook;
-import com.leonardobishop.quests.hooks.title.Title;
-import com.leonardobishop.quests.hooks.title.Title_Bukkit;
-import com.leonardobishop.quests.hooks.title.Title_BukkitNoTimings;
-import com.leonardobishop.quests.hooks.title.Title_Other;
+import com.leonardobishop.quests.obj.Messages;
 import com.leonardobishop.quests.player.QPlayer;
 import com.leonardobishop.quests.player.QPlayerManager;
+import com.leonardobishop.quests.player.questprogressfile.QuestProgress;
+import com.leonardobishop.quests.player.questprogressfile.QuestProgressFile;
+import com.leonardobishop.quests.player.questprogressfile.TaskProgress;
 import com.leonardobishop.quests.quests.QuestManager;
+import com.leonardobishop.quests.quests.Task;
 import com.leonardobishop.quests.quests.tasktypes.TaskType;
 import com.leonardobishop.quests.quests.tasktypes.TaskTypeManager;
-import com.leonardobishop.quests.quests.tasktypes.types.BreedingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.BrewingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.BuildingCertainTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.BuildingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.CommandTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.DealDamageTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.DistancefromTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.EnchantingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.ExpEarnTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.FishingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.InventoryTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.MilkingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.MiningCertainTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.MiningTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.MobkillingCertainTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.MobkillingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.PermissionTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.PlayerkillingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.PlaytimeTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.PositionTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.ShearingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.TamingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.WalkingTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.ASkyBlockLevelType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.BentoBoxLevelTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.CitizensDeliverTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.CitizensInteractTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.EssentialsBalanceTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.EssentialsMoneyEarnTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.IridiumSkyblockValueType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.MythicMobsKillingType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.PlaceholderAPIEvaluateTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.ShopGUIPlusBuyCertainTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.ShopGUIPlusSellCertainTaskType;
-import com.leonardobishop.quests.quests.tasktypes.types.dependent.uSkyBlockLevelType;
+import com.leonardobishop.quests.quests.tasktypes.types.*;
+import com.leonardobishop.quests.sql.SQLConnector;
+import com.leonardobishop.quests.title.Title;
+import com.leonardobishop.quests.title.Title_Bukkit;
+import com.leonardobishop.quests.title.Title_BukkitNoTimings;
+import com.leonardobishop.quests.title.Title_Other;
 import com.leonardobishop.quests.updater.Updater;
-import com.leonardobishop.quests.util.Messages;
-import org.bstats.bukkit.MetricsLite;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 public class Quests extends JavaPlugin {
-
-    private static Quests instance;
-
-    /** Handles anything to do with loaded quests */
-    private QuestManager questManager;
-    /** Handles anything to do with task types */
-    private TaskTypeManager taskTypeManager;
-    /** Handles anything to do with players */
-    private QPlayerManager qPlayerManager;
-
-    /** Checks and records ready plugin updates */
-    private Updater updater;
-    /** Abstract title handle to allow for cross version compatibility */
-    private Title titleHandle;
-    /** Abstract item handle to allow for cross version compatibility */
-    private ItemGetter itemGetter;
-    /** Task which checks quests and marks them as complete if requirements are satisfied */
-    private QuestCompleter questCompleter;
-    /** Loads configurations and tracks errors */
-    private QuestsConfigLoader questsConfigLoader;
-    /** Quests logger to allow for configurable logging levels */
-    private QuestsLogger questsLogger;
-    /** Handles menu tracking and clicks */
-    private MenuController menuController;
-
-    private IPlaceholderAPIHook placeholderAPIHook;
-    private ICoreProtectHook coreProtectHook;
-
-    /** If true, the plugin should be inoperable */
+    private static SQLConnector connector;
+    private static QuestManager questManager;
+    private static QPlayerManager qPlayerManager;
+    private static TaskTypeManager taskTypeManager;
+    private static Updater updater;
+    private static Title title;
     private boolean brokenConfig = false;
-    private BukkitTask questAutosaveTask;
-    private BukkitTask questQueuePollTask;
+    private static QuestsConfigLoader questsConfigLoader;
+
+    public SQLConnector getDatabase() {
+        return connector;
+    }
 
     public static Quests get() {
-        return instance;
+        return (Quests) Bukkit.getPluginManager().getPlugin("Quests");
     }
 
     public QuestManager getQuestManager() {
@@ -132,8 +76,8 @@ public class Quests extends JavaPlugin {
         this.brokenConfig = brokenConfig;
     }
 
-    public Title getTitleHandle() {
-        return titleHandle;
+    public Title getTitle() {
+        return title;
     }
 
     public Updater getUpdater() {
@@ -142,10 +86,6 @@ public class Quests extends JavaPlugin {
 
     public QuestsConfigLoader getQuestsConfigLoader() {
         return questsConfigLoader;
-    }
-
-    public MenuController getMenuController() {
-        return menuController;
     }
 
     public String convertToFormat(long m) { //seconds please
@@ -161,56 +101,51 @@ public class Quests extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        instance = this;
-
-        questsLogger = new QuestsLogger(this, QuestsLogger.LoggingLevel.INFO);
-        questCompleter = new QuestCompleter(this);
-
         taskTypeManager = new TaskTypeManager(this);
         questManager = new QuestManager(this);
         qPlayerManager = new QPlayerManager(this);
-        menuController = new MenuController(this);
+        connector = new SQLConnector(this);
 
-        this.generateConfigurations();
-        this.setupVersionSpecific();
+        dataGenerator();
+        setupTitle();
 
-        super.getCommand("quests").setExecutor(new CommandQuests(this));
+        Bukkit.getPluginCommand("quests").setExecutor(new CommandQuests(this));
         Bukkit.getPluginManager().registerEvents(new EventPlayerJoin(this), this);
-        Bukkit.getPluginManager().registerEvents(menuController, this);
+        Bukkit.getPluginManager().registerEvents(new EventInventory(this), this);
         Bukkit.getPluginManager().registerEvents(new EventPlayerLeave(this), this);
 
-        MetricsLite metrics = new MetricsLite(this, 3443);
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            new QuestsPlaceholders(this).register();
+        }
+
+        Metrics metrics = new Metrics(this);
         if (metrics.isEnabled()) {
-            this.getQuestsLogger().info("Metrics started. This can be disabled at /plugins/bStats/config.yml.");
+            this.getLogger().log(Level.INFO, "Metrics started. This can be disabled at /plugins/bStats/config.yml.");
         }
 
         questsConfigLoader = new QuestsConfigLoader(this);
 
-        // register task types after the server has fully started
         Bukkit.getScheduler().runTask(this, () -> {
             taskTypeManager.registerTaskType(new MiningTaskType());
-            taskTypeManager.registerTaskType(new MiningCertainTaskType(this));
+            taskTypeManager.registerTaskType(new MiningCertainTaskType());
             taskTypeManager.registerTaskType(new BuildingTaskType());
             taskTypeManager.registerTaskType(new BuildingCertainTaskType());
             taskTypeManager.registerTaskType(new MobkillingTaskType());
             taskTypeManager.registerTaskType(new MobkillingCertainTaskType());
             taskTypeManager.registerTaskType(new PlayerkillingTaskType());
             taskTypeManager.registerTaskType(new FishingTaskType());
-            taskTypeManager.registerTaskType(new InventoryTaskType(this));
+            taskTypeManager.registerTaskType(new InventoryTaskType());
             taskTypeManager.registerTaskType(new WalkingTaskType());
             taskTypeManager.registerTaskType(new TamingTaskType());
             taskTypeManager.registerTaskType(new MilkingTaskType());
             taskTypeManager.registerTaskType(new ShearingTaskType());
             taskTypeManager.registerTaskType(new PositionTaskType());
-            taskTypeManager.registerTaskType(new PlaytimeTaskType(this));
+            taskTypeManager.registerTaskType(new PlaytimeTaskType());
             taskTypeManager.registerTaskType(new BrewingTaskType());
             taskTypeManager.registerTaskType(new ExpEarnTaskType());
             taskTypeManager.registerTaskType(new BreedingTaskType());
             taskTypeManager.registerTaskType(new EnchantingTaskType());
             taskTypeManager.registerTaskType(new DealDamageTaskType());
-            taskTypeManager.registerTaskType(new PermissionTaskType(this));
-            taskTypeManager.registerTaskType(new DistancefromTaskType());
-            taskTypeManager.registerTaskType(new CommandTaskType());
             // TODO: FIX
             // taskTypeManager.registerTaskType(new BrewingCertainTaskType());
             if (Bukkit.getPluginManager().isPluginEnabled("ASkyBlock")) {
@@ -226,71 +161,54 @@ public class Quests extends JavaPlugin {
                 taskTypeManager.registerTaskType(new uSkyBlockLevelType());
             }
             if (Bukkit.getPluginManager().isPluginEnabled("Citizens")) {
-                taskTypeManager.registerTaskType(new CitizensDeliverTaskType(this));
+                taskTypeManager.registerTaskType(new CitizensDeliverTaskType());
                 taskTypeManager.registerTaskType(new CitizensInteractTaskType());
             }
             if (Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
                 taskTypeManager.registerTaskType(new MythicMobsKillingType());
             }
-            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-                taskTypeManager.registerTaskType(new PlaceholderAPIEvaluateTaskType(this));
-            }
-            if (Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
-                taskTypeManager.registerTaskType(new EssentialsMoneyEarnTaskType());
-                taskTypeManager.registerTaskType(new EssentialsBalanceTaskType());
-            }
-            if (Bukkit.getPluginManager().isPluginEnabled("ShopGUIPlus")) {
-                // not tested
-                taskTypeManager.registerTaskType(new ShopGUIPlusBuyCertainTaskType());
-                taskTypeManager.registerTaskType(new ShopGUIPlusSellCertainTaskType());
-            }
 
-            taskTypeManager.closeRegistrations();
             reloadQuests();
-//            if (!questsConfigLoader.getBrokenFiles().isEmpty()) {
-//                this.getQuestsLogger().severe("Quests has failed to load the following files:");
-//                for (Map.Entry<String, QuestsConfigLoader.ConfigLoadError> entry : questsConfigLoader.getBrokenFiles().entrySet()) {
-//                    this.getQuestsLogger().severe(" - " + entry.getKey() + ": " + entry.getValue().getMessage());
-//                }
-//            }
-
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                qPlayerManager.loadPlayer(player.getUniqueId());
+            if (!questsConfigLoader.getBrokenFiles().isEmpty()) {
+                this.getLogger().warning("Quests has failed to load the following files:");
+                for (Map.Entry<String, QuestsConfigLoader.ConfigLoadError> entry : questsConfigLoader.getBrokenFiles().entrySet()) {
+                    this.getLogger().warning(" - " + entry.getKey() + ": " + entry.getValue().getMessage());
+                }
+                this.getLogger().warning(ChatColor.GRAY.toString() + ChatColor.ITALIC + "If this is your first time using Quests, please delete the Quests folder and RESTART (not reload!) the server.");
             }
+
+            Bukkit.getOnlinePlayers().forEach(p -> qPlayerManager.loadPlayer(p.getUniqueId(), false, getDatabase().getStoreType()));
         });
-
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            this.placeholderAPIHook = new PlaceholderAPIHook();
-            this.placeholderAPIHook.registerExpansion(this);
-        }
-
-        if (Bukkit.getPluginManager().isPluginEnabled("CoreProtect")) {
-            this.coreProtectHook = new CoreProtectHook();
-        } else {
-            this.coreProtectHook = new CoreProtectNoHook();
-        }
-
-        // this intentionally should not be documented
-        boolean ignoreUpdates = false;
-        try {
-            ignoreUpdates = new File(this.getDataFolder() + File.separator + "stfuQuestsUpdate").exists();
-        } catch (Throwable ignored) { }
-
-
-        updater = new Updater(this, !ignoreUpdates);
-        if (!ignoreUpdates) {
-            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                updater.check();
-            });
-        }
-    }
-
-    public IPlaceholderAPIHook getPlaceholderAPIHook() {
-        return placeholderAPIHook;
-    }
-
-    public ICoreProtectHook getCoreProtectHook() {
-        return coreProtectHook;
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> qPlayerManager.getQPlayers().forEach(qPlayer -> {
+            if (!qPlayer.isOnlyDataLoaded()) {
+                qPlayer.getQuestProgressFile().saveToDisk(Quests.get().getDatabase().getStoreType());
+            }
+        }), 12000L, 12000L);
+        Bukkit.getScheduler().runTaskTimer(this, () -> qPlayerManager.getQPlayers().forEach(qPlayer -> {
+            if (!qPlayer.isOnlyDataLoaded()) {
+                QuestProgressFile questProgressFile = qPlayer.getQuestProgressFile();
+                this.getQuestManager().getQuests().forEach((key, quest) -> {
+                    QuestProgress questProgress = questProgressFile.getQuestProgress(quest);
+                    if (questProgressFile.hasStartedQuest(quest)) {
+                        boolean complete = true;
+                        for (Task task : quest.getTasks()) {
+                            TaskProgress taskProgress;
+                            if ((taskProgress = questProgress.getTaskProgress(task.getId())) == null || !taskProgress.isCompleted()) {
+                                complete = false;
+                                break;
+                            }
+                        }
+                        if (complete) {
+                            questProgressFile.completeQuest(quest);
+                        }
+                    }
+                });
+            }
+        }), 10 * 20L, 10 * 20L); //Data is saved every 10 seconds in case of crash; the player data is also saved when the player leaves the server
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            updater = new Updater(this);
+            updater.check();
+        });
     }
 
     @Override
@@ -298,104 +216,93 @@ public class Quests extends JavaPlugin {
         for (TaskType taskType : getTaskTypeManager().getTaskTypes()) {
             try {
                 taskType.onDisable();
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
         }
         for (QPlayer qPlayer : qPlayerManager.getQPlayers()) {
-            qPlayer.getQuestProgressFile().saveToDisk(false);
+            if (qPlayer.isOnlyDataLoaded()) {
+                continue;
+            }
+            qPlayer.getQuestProgressFile().saveToDisk(Quests.get().getDatabase().getStoreType());
         }
-        if (placeholderAPIHook != null) placeholderAPIHook.unregisterExpansion();
     }
 
     public void reloadQuests() {
         questManager.getQuests().clear();
         questManager.getCategories().clear();
         taskTypeManager.resetTaskTypes();
+        connector.stopConnection();
 
         questsConfigLoader.loadConfig();
+    }
 
-        long autosaveInterval = 12000;
-        if (!isBrokenConfig()) {
-            autosaveInterval = this.getConfig().getLong("options.performance-tweaking.quest-autosave-interval", 12000);
-        }
-        boolean autosaveTaskCancelled = true;
-        if (questAutosaveTask != null) {
-            try {
-                questAutosaveTask.cancel();
-            } catch (Exception ex) {
-                questsLogger.debug("Cannot cancel and restart quest autosave task");
-                autosaveTaskCancelled = false;
+    public ItemStack getItemStack(String path, FileConfiguration config) {
+        return getItemStack(config.getConfigurationSection(path));
+    }
+
+    @SuppressWarnings("deprecation")
+    public ItemStack getItemStack(ConfigurationSection config) {
+        String cName = config.getString("name", "Item Name");
+        String cType = config.getString("type", "BEDROCK"); // Error, type bedrock, no more errors!!! :)
+        int data = config.getInt("data", 0);
+        List<String> cLore = config.getStringList("lore");
+
+        String name;
+        Material type;
+        List<String> lore = new ArrayList<>();
+        if (cLore != null && !cLore.isEmpty()) {
+            for (String s : cLore) {
+                lore.add(ChatColor.translateAlternateColorCodes('&', s));
             }
         }
-        if (autosaveTaskCancelled) {
-            questAutosaveTask = Bukkit.getScheduler().runTaskTimer(this, () -> new QuestsAutosaveRunnable(this), autosaveInterval, autosaveInterval);
+        name = ChatColor.translateAlternateColorCodes('&', cName);
+        type = Material.matchMaterial(cType);
+
+
+        if (type == null) {
+            type = Material.STONE;
         }
 
-        boolean queuePollTaskCancelled = true;
-        long queueExecuteInterval = 1;
-        if (!isBrokenConfig()) {
-            queueExecuteInterval = this.getConfig().getLong("options.performance-tweaking.quest-queue-executor-interval", 1);
-        }
-        if (questQueuePollTask != null) {
-            try {
-                questQueuePollTask.cancel();
-            } catch (Exception ex) {
-                questsLogger.debug("Cannot cancel and restart quest autosave task");
-                queuePollTaskCancelled = false;
-            }
-        }
-        if (queuePollTaskCancelled) {
-            questQueuePollTask = Bukkit.getScheduler().runTaskTimer(this, questCompleter, queueExecuteInterval, queueExecuteInterval);
-        }
+        ItemStack is;
+        if (data == 0)
+            is = new ItemStack(type, 1);
+        else
+            is = new ItemStack(type, 1, (short) data);
+        ItemMeta ism = is.getItemMeta();
+        ism.setLore(lore);
+        ism.setDisplayName(name);
+        is.setItemMeta(ism);
+
+        return is;
     }
 
-    public ItemStack getItemStack(String path, ConfigurationSection config, ItemGetter.Filter... excludes) {
-        return itemGetter.getItem(path, config, this, excludes);
-    }
-
-    public ItemGetter getItemGetter() {
-        return itemGetter;
-    }
-
-    private void setupVersionSpecific() {
+    private boolean setupTitle() {
         String version;
         try {
             version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
         } catch (ArrayIndexOutOfBoundsException e) {
-            getQuestsLogger().warning("Failed to resolve server version - some features will not work!");
-            titleHandle = new Title_Other();
-            itemGetter = new ItemGetter_Late_1_8();
-            return;
+            return false;
         }
-
-        getQuestsLogger().info("Your server is running version " + version + ".");
-
+        boolean success = false;
+        getLogger().info("Your server is running version " + version + ".");
         if (version.startsWith("v1_7")) {
-            titleHandle = new Title_Other();
+            title = new Title_Other();
         } else if (version.startsWith("v1_8") || version.startsWith("v1_9") || version.startsWith("v1_10")) {
-            titleHandle = new Title_BukkitNoTimings();
+            title = new Title_BukkitNoTimings();
         } else {
-            titleHandle = new Title_Bukkit();
+            title = new Title_Bukkit();
         }
-
-        if (version.startsWith("v1_7") || version.startsWith("v1_8") || version.startsWith("v1_9")
-                || version.startsWith("v1_10") || version.startsWith("v1_11") || version.startsWith("v1_12")) {
-            itemGetter = new ItemGetter_Late_1_8();
-        } else if (version.startsWith("v1_13")) {
-            itemGetter = new ItemGetter_1_13();
+        if (title instanceof Title_Bukkit) {
+            getLogger().info("Titles have been enabled.");
+        } else if (title instanceof Title_BukkitNoTimings) {
+            getLogger().info("Titles have been enabled, although they have limited timings.");
         } else {
-            itemGetter = new ItemGetterLatest();
+            getLogger().info("Titles are not supported for this version.");
         }
-
-        if (titleHandle instanceof Title_Bukkit) {
-            getQuestsLogger().info("Titles have been enabled.");
-        } else if (titleHandle instanceof Title_BukkitNoTimings) {
-            getQuestsLogger().info("Titles have been enabled, although they have limited timings.");
-        } else {
-            getQuestsLogger().info("Titles are not supported for this version.");
-        }
+        return success;
     }
 
-    private void generateConfigurations() {
+    private void dataGenerator() {
         File directory = new File(String.valueOf(this.getDataFolder()));
         if (!directory.exists() && !directory.isDirectory()) {
             directory.mkdir();
@@ -405,6 +312,7 @@ public class Quests extends JavaPlugin {
         if (!config.exists()) {
             try {
                 config.createNewFile();
+                //try (InputStream in = Quests.class.getClassLoader().getResourceAsStream("config.yml")) {
                 try (InputStream in = this.getResource("config.yml")) {
                     OutputStream out = new FileOutputStream(config);
                     byte[] buffer = new byte[1024];
@@ -413,6 +321,7 @@ public class Quests extends JavaPlugin {
                         out.write(buffer, 0, lenght);
                         lenght = in.read(buffer);
                     }
+                    //ByteStreams.copy(in, out); BETA method, data losses ahead
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -432,13 +341,13 @@ public class Quests extends JavaPlugin {
             examples.add("example4.yml");
             examples.add("example5.yml");
             examples.add("example6.yml");
-            examples.add("example7.yml");
             examples.add("README.txt");
 
             for (String name : examples) {
                 File file = new File(this.getDataFolder() + File.separator + "quests" + File.separator + name);
                 try {
                     file.createNewFile();
+                    //try (InputStream in = Quests.class.getClassLoader().getResourceAsStream("quests/" + name)) {
                     try (InputStream in = this.getResource("quests/" + name)) {
                         OutputStream out = new FileOutputStream(file);
                         byte[] buffer = new byte[1024];
@@ -447,6 +356,7 @@ public class Quests extends JavaPlugin {
                             out.write(buffer, 0, lenght);
                             lenght = in.read(buffer);
                         }
+                        //ByteStreams.copy(in, out); BETA method, data losses ahead
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -455,13 +365,5 @@ public class Quests extends JavaPlugin {
                 }
             }
         }
-    }
-
-    public QuestCompleter getQuestCompleter() {
-        return questCompleter;
-    }
-
-    public QuestsLogger getQuestsLogger() {
-        return questsLogger;
     }
 }
